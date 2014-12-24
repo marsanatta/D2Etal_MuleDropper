@@ -1,0 +1,192 @@
+/////////////////////////////////////////////////////////////////////////
+// ScriptName: Action                                                 //
+// Version: 1.0                                                       //
+// Description: some in game actions                                  //
+// Author: Wei-Shu Hung                                               //
+// Email: weishu.hung@gmail.com                                       //
+// Date: 2014/12/24                                                   //
+/////////////////////////////////////////////////////////////////////////
+
+Include("libs/common/NTUtilities.ntl");
+Include("libs/common/NTItemAlias.ntl");
+
+var RunewordSpiritIDs = [
+_NTIPAliasClassID["talrune"],
+_NTIPAliasClassID["thulrune"],
+_NTIPAliasClassID["ortrune"],
+_NTIPAliasClassID["amnrune"],
+_NTIPAliasClassID["helrune"]];
+
+var RunewordInsightIDs = [
+_NTIPAliasClassID["ralrune"],
+_NTIPAliasClassID["tirrune"],
+_NTIPAliasClassID["talrune"],
+_NTIPAliasClassID["solrune"],
+_NTIPAliasClassID["helrune"]];
+
+var PerfectGemIDs = [
+_NTIPAliasClassID["perfectamethyst"],
+_NTIPAliasClassID["perfecttopaz"],
+_NTIPAliasClassID["perfectsapphire"],
+_NTIPAliasClassID["perfectemerald"],
+_NTIPAliasClassID["perfectruby"],
+_NTIPAliasClassID["perfectdiamond"],
+_NTIPAliasClassID["perfectskull"]];
+
+var KeyIDs = [
+_NTIPAliasClassID["keyofterror"],
+_NTIPAliasClassID["keyofhate"],
+_NTIPAliasClassID["keyofdestruction"]];
+
+var UsefulIDs = [
+_NTIPAliasClassID["talrune"],
+_NTIPAliasClassID["thulrune"],
+_NTIPAliasClassID["ortrune"],
+_NTIPAliasClassID["amnrune"],
+_NTIPAliasClassID["helrune"],
+_NTIPAliasClassID["ralrune"],
+_NTIPAliasClassID["tirrune"],
+_NTIPAliasClassID["solrune"],
+_NTIPAliasClassID["perfectamethyst"],
+_NTIPAliasClassID["perfecttopaz"],
+_NTIPAliasClassID["perfectsapphire"],
+_NTIPAliasClassID["perfectemerald"],
+_NTIPAliasClassID["perfectruby"],
+_NTIPAliasClassID["perfectdiamond"],
+_NTIPAliasClassID["perfectskull"],
+_NTIPAliasClassID["keyofterror"],
+_NTIPAliasClassID["keyofhate"],
+_NTIPAliasClassID["keyofdestruction"],
+_NTIPAliasClassID["tokenofabsolution"]
+];
+
+//drop items according to classids (reference to classid in sdk files or NTItemAlias.ntl)
+function CM_DropItem(classids) {
+
+	NTU_MoveToStash()
+	
+	var _items = me.GetItems();
+
+	if(!_items)
+		return false;
+
+	for(var i = 0 ; i < _items.length ; i++) {
+		if(_items[i].mode == 0 && 
+		(_items[i].itemloc == 4 || _items[i].itemloc == 0)) {
+			
+			for(var j = 0; j < classids.length; j++) {
+				if(_items[i].classid == classids[j]){
+					NTT_DropItem(_items[i]);		
+					break;
+				}
+         	}
+		}
+	}
+	me.Cancel(1);
+}
+
+//pick items according to nip check list; automatically arrange and store items
+function CM_PickItems() {
+	
+	NTConfig_SnagRange = 40;
+	NTConfig_FreeSpace = 2;
+	
+	NTTM_CheckAct(1);
+	//drop junk scrolls
+	SetUIState(0x01,true);
+		var _items = me.GetItems();
+			for(var i = 0 ; i < _items.length ; i++) {
+				if(_items[i].mode == 0 && (_items[i].classid == 529 || _items[i].classid == 530)) {
+			NTT_DropItem(_items[i]);
+		}
+	}
+	SetUIState(0x01,false);
+	
+	for (var _ctr=0;_ctr<5; _ctr++) {
+		Print("trys:" + _ctr);
+		//if no item on the ground
+		if (!_ItemsOnGround()) {
+			//log the inventory and stash
+			Print(C_GREEN + "finished picking all the items")
+			CMU_TLInventory();
+			break;
+		}
+		//stash items already in the inventory
+		NTTM_TownMove('stash');
+		_stash = NTC_FindUnit(NTC_UNIT_OBJECT, NTC_UNIT_STASH);
+		if (!NTT_DoInteract(_stash)) NTT_DoInteract(_stash);
+		if (!NTT_ManageStash()) NTT_ManageStash();
+		Delay(1500);
+		me.Cancel(1);
+		//if thie char cannot pick up all items
+		if (!_GrabItems() && _ItemsOnGround() && !_GrabItems()) { 
+			CMU_TLInventory();//log inventory and stash
+			Delay(500);
+		}
+	}
+	Print(C_GREEN + "This char is done");
+    NTC_SendMsgToScript("NTBotGame.ntj", "SCRIPT_END");
+}
+
+//pick up nip-check passed items until the char cannot pick
+function _GrabItems()
+{
+	Print("grabbing items");
+	var _item;
+	var _itemsChecked = [];
+	var resultArray = new Array();
+	var _value;
+	var _pickedOne = false;
+	
+	_item = NTC_FindUnit(NTC_UNIT_ITEM);
+	while(_item) {
+		//check items using nip check list; if they pass, join the itemsChecked
+		_itemsChecked.splice(0, _itemsChecked.length);
+		do {
+			if(_item.mode == 3 || _item.mode == 5) {
+				if(NTSI_IsIgnoredItemInt(_item.classid) || _item.classid == 529 || _item.classid == 530)
+					continue;
+
+				//if (NTSI_CheckItem(_item, false)[0]) {
+				//	_itemsChecked.push(new NTSI_ItemInt(_item, true));
+				//}
+				resultArray = NTSI_CheckItem(_item, false);
+				_value = resultArray[0];
+				if(_value) { _itemsChecked.push(new NTSI_ItemInt(_item, _value, resultArray)); }
+			}
+		} while(_item.GetNext());
+		if(_itemsChecked.length == 0){ //nothing to pick now
+			Print("nothing to pick");
+			break;
+		}
+		//pick up whatever item in the itemsChecked
+		var _checkedItem = _itemsChecked.pop();
+		_item = NTC_FindUnit(NTC_UNIT_ITEM, _checkedItem.GID);
+		//if the item can be picked up, pick it
+		if (NTT_CheckSpace(_item.xsize, _item.ysize)) {
+			if (NTSI_PickUpItemInt(_item)) {
+				_pickedOne = true;
+			}
+		}
+		else if (!NTT_CheckSpace(1, 1)) {//char cannot pick anything
+			Print(C_RED + "cannot pick anything");
+			break;
+		}
+		_item = NTC_FindUnit(NTC_UNIT_ITEM);//update the items
+	}
+	return _pickedOne;
+}
+
+//check if there is item on the ground
+var _ItemsOnGround = function() {
+	var _item = NTC_FindUnit(NTC_UNIT_ITEM);
+	if (!_item) return false;
+	do {
+		if(_item.mode == 3 || _item.mode == 5) {
+			if(NTSI_IsIgnoredItemInt(_item.classid) || _item.classid == 529 || _item.classid == 530)
+				continue;
+				}
+			return true;
+	} while(_item.GetNext());
+	return false;
+};

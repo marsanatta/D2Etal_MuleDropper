@@ -8,21 +8,21 @@ The script logs in every characters in assigned accounts. Each character joins a
 
 # Guides
 ## Installation
-Clone the repository to your computer.
-Copy three things into your D2Etal folder:
-D2Etal_MuleDropper\scripts\CMMuleDrop.ntj to D2Etal\scripts
-D2Etal_MuleDropper\scripts\NTBot\bots\CMDropper.ntj to D2Etal\scripts\NTBot\bots
-D2Etal_MuleDropper\scripts\libs\common\CMAction.ntl to D2Etal\scripts\libs\common
-Add folders
-add a folder named CMDrop to D2Etal\scripts
-add a folder named Status to D2Etal\scripts\CMDrop
+- Clone the repository to your computer.  
+- Copy three things into your D2Etal folder:  
+    - D2Etal_MuleDropper\scripts\CMMuleDrop.ntj to D2Etal\scripts  
+    - D2Etal_MuleDropper\scripts\NTBot\bots\CMDropper.ntj to D2Etal\scripts\NTBot\bots  
+    - D2Etal_MuleDropper\scripts\libs\common\CMAction.ntl to D2Etal\scripts\libs\common  
+- Add folders  
+    - add a folder named CMDrop to D2Etal\scripts  
+    - add a folder named Status to D2Etal\scripts\CMDrop  
 
 ## Configuration
-in D2Etal\scripts\CMMuleDrop.ntj
-Set the game name to join and the game password. e.g. game = "example_abc"; password = "example_123";
-Set the accounts to log in. e.g. var accNames = ["accounts1", "accounts2", "accounts3"] (all accounts must have the same password)
-in D2Etal\scripts\NTBot\bots\CMDropper.ntj
-Set the items you want to drop. The format is [itemid1, itemid2, itemid3, ...]. You can find the item id in D2Etal\sdk\classid.txt e.g. var items = [647, 648, 649]; will drop Uber keys.
+- in D2Etal\scripts\CMMuleDrop.ntj
+    - Set the game name to join and the game password. e.g. game = "example_abc"; password = "example_123";
+    - Set the accounts to log in. e.g. var accNames = ["accounts1", "accounts2", "accounts3"] (all accounts must have the same password)
+- in D2Etal\scripts\NTBot\bots\CMDropper.ntj
+    - Set the items you want to drop. The format is [itemid1, itemid2, itemid3, ...]. You can find the item id in D2Etal\sdk\classid.txt e.g. var items = [647, 648, 649]; will drop Uber keys.
 
 ## Usage
 Use a character to create a game manually. The game name and password must be the same with configuration in CMMuleDrop.ntj.
